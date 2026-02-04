@@ -70,7 +70,7 @@ function Layout() {
           <h2>Finance Tracker</h2>
           <p className="user-name">{user?.firstName} {user?.lastName}</p>
           <span className={`role-badge ${user?.role}`}>
-            {user?.role === 'super_admin' ? 'Super Admin' : 'Demo User'}
+            {user?.role === 'super_admin' ? 'Admin' : 'Demo Account'}
           </span>
         </div>
 
