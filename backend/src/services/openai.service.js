@@ -71,14 +71,15 @@ const categorizeTransaction = async (description, amount, merchant = null) => {
       return null;
     }
 
-    // Get ft_categories
+    // Get ft_categories (both income and expense)
     const ft_categoriesResult = await pool.query(
-      `SELECT id, name, type FROM ft_categories WHERE type = 'expense' ORDER BY name`
+      `SELECT id, name, type FROM ft_categories ORDER BY type, name`
     );
 
     const ft_categories = ft_categoriesResult.rows.map(cat => ({
       id: cat.id,
-      name: cat.name
+      name: cat.name,
+      type: cat.type
     }));
 
     const systemPrompt = await buildSystemPrompt('categorization');
@@ -87,8 +88,14 @@ Description: ${description}
 Amount: $${amount}
 ${merchant ? `Merchant: ${merchant}` : ''}
 
-Available ft_categories:
-${ft_categories.map(cat => `- ${cat.name} (ID: ${cat.id})`).join('\n')}
+Available categories (grouped by type):
+INCOME CATEGORIES:
+${ft_categories.filter(cat => cat.type === 'income').map(cat => `- ${cat.name} (ID: ${cat.id})`).join('\n')}
+
+EXPENSE CATEGORIES:
+${ft_categories.filter(cat => cat.type === 'expense').map(cat => `- ${cat.name} (ID: ${cat.id})`).join('\n')}
+
+IMPORTANT: If the description suggests this is income (received, earned, paid to me, salary, etc.), choose an INCOME category. Otherwise, choose an EXPENSE category.
 
 Return ONLY a JSON object with the category_id and confidence (0-1). Example: {"category_id": "uuid-here", "confidence": 0.95}`;
 

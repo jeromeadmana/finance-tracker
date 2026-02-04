@@ -18,6 +18,18 @@ function Layout() {
     }
   }, [user]);
 
+  // Listen for transaction creation events
+  useEffect(() => {
+    const handleTransactionCreated = () => {
+      if (user?.role === 'user') {
+        fetchDemoStats();
+      }
+    };
+
+    window.addEventListener('transactionCreated', handleTransactionCreated);
+    return () => window.removeEventListener('transactionCreated', handleTransactionCreated);
+  }, [user]);
+
   const fetchDemoStats = async () => {
     try {
       const response = await demoAPI.getStats();

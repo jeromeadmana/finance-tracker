@@ -29,7 +29,13 @@ function Transactions() {
     try {
       await transactionAPI.createFromNL(nlInput);
       setNlInput('');
-      fetchTransactions();
+
+      // Refresh transaction list
+      await fetchTransactions();
+
+      // Dispatch custom event to notify Layout component to update counter
+      window.dispatchEvent(new CustomEvent('transactionCreated'));
+
       alert('Transaction created successfully!');
     } catch (error) {
       alert('Failed to create transaction');

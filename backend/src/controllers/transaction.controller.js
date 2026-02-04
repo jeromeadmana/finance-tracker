@@ -43,10 +43,10 @@ const getTransactions = async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    res.json({ ft_transactions: result.rows });
+    res.json({ transactions: result.rows });
   } catch (error) {
-    console.error('Get ft_transactions error:', error);
-    res.status(500).json({ error: { message: 'Failed to fetch ft_transactions' } });
+    console.error('Get transactions error:', error);
+    res.status(500).json({ error: { message: 'Failed to fetch transactions' } });
   }
 };
 
