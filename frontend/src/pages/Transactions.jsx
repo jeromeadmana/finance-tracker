@@ -13,9 +13,10 @@ function Transactions() {
   const fetchTransactions = async () => {
     try {
       const response = await transactionAPI.getAll();
-      setTransactions(response.data.transactions);
+      setTransactions(response.data.transactions || []);
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -72,27 +73,35 @@ function Transactions() {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((transaction) => (
-              <tr key={transaction.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '12px' }}>{new Date(transaction.transaction_date).toLocaleDateString()}</td>
-                <td style={{ padding: '12px' }}>{transaction.description}</td>
-                <td style={{ padding: '12px' }}>{transaction.category_name || 'Uncategorized'}</td>
-                <td style={{ padding: '12px', fontWeight: 'bold', color: transaction.type === 'income' ? '#10b981' : '#ef4444' }}>
-                  ${parseFloat(transaction.amount).toFixed(2)}
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <span style={{
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    background: transaction.type === 'income' ? '#d1fae5' : '#fee2e2',
-                    color: transaction.type === 'income' ? '#065f46' : '#991b1b'
-                  }}>
-                    {transaction.type}
-                  </span>
+            {transactions && transactions.length > 0 ? (
+              transactions.map((transaction) => (
+                <tr key={transaction.id} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: '12px' }}>{new Date(transaction.transaction_date).toLocaleDateString()}</td>
+                  <td style={{ padding: '12px' }}>{transaction.description}</td>
+                  <td style={{ padding: '12px' }}>{transaction.category_name || 'Uncategorized'}</td>
+                  <td style={{ padding: '12px', fontWeight: 'bold', color: transaction.type === 'income' ? '#10b981' : '#ef4444' }}>
+                    ${parseFloat(transaction.amount).toFixed(2)}
+                  </td>
+                  <td style={{ padding: '12px' }}>
+                    <span style={{
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      background: transaction.type === 'income' ? '#d1fae5' : '#fee2e2',
+                      color: transaction.type === 'income' ? '#065f46' : '#991b1b'
+                    }}>
+                      {transaction.type}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                  No transactions yet. Add your first transaction above!
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
