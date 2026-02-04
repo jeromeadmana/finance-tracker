@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { transactionAPI } from '../services/api';
+import { formatCurrency } from '../utils/currency';
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -38,18 +39,18 @@ function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginTop: '20px' }}>
         <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <h3 style={{ margin: '0 0 10px 0', color: '#666' }}>Income</h3>
-          <p style={{ fontSize: '28px', margin: 0, color: '#10b981' }}>${parseFloat(income).toFixed(2)}</p>
+          <p style={{ fontSize: '28px', margin: 0, color: '#10b981' }}>{formatCurrency(income)}</p>
         </div>
 
         <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <h3 style={{ margin: '0 0 10px 0', color: '#666' }}>Expenses</h3>
-          <p style={{ fontSize: '28px', margin: 0, color: '#ef4444' }}>${parseFloat(expenses).toFixed(2)}</p>
+          <p style={{ fontSize: '28px', margin: 0, color: '#ef4444' }}>{formatCurrency(expenses)}</p>
         </div>
 
         <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <h3 style={{ margin: '0 0 10px 0', color: '#666' }}>Balance</h3>
           <p style={{ fontSize: '28px', margin: 0, color: balance >= 0 ? '#10b981' : '#ef4444' }}>
-            ${parseFloat(balance).toFixed(2)}
+            {formatCurrency(balance)}
           </p>
         </div>
       </div>
@@ -59,7 +60,7 @@ function Dashboard() {
         {stats?.byCategory?.filter(c => c.type === 'expense').slice(0, 5).map((cat, idx) => (
           <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #eee' }}>
             <span>{cat.category || 'Uncategorized'}</span>
-            <span style={{ fontWeight: 'bold' }}>${parseFloat(cat.total).toFixed(2)}</span>
+            <span style={{ fontWeight: 'bold' }}>{formatCurrency(cat.total)}</span>
           </div>
         ))}
       </div>

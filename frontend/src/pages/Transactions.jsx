@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { transactionAPI } from '../services/api';
+import { formatCurrency } from '../utils/currency';
 
 function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -86,7 +87,7 @@ function Transactions() {
                   <td style={{ padding: '12px' }}>{transaction.description}</td>
                   <td style={{ padding: '12px' }}>{transaction.category_name || 'Uncategorized'}</td>
                   <td style={{ padding: '12px', fontWeight: 'bold', color: transaction.type === 'income' ? '#10b981' : '#ef4444' }}>
-                    ${parseFloat(transaction.amount).toFixed(2)}
+                    {formatCurrency(transaction.amount)}
                   </td>
                   <td style={{ padding: '12px' }}>
                     <span style={{
