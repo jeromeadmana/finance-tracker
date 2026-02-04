@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { aiAPI } from '../services/api';
+import ReactMarkdown from 'react-markdown';
 
 function AIChat() {
   const [messages, setMessages] = useState([]);
@@ -52,7 +53,29 @@ function AIChat() {
                 marginLeft: message.role === 'user' ? '20%' : 0,
                 marginRight: message.role === 'user' ? 0 : '20%'
               }}>
-                {message.content}
+                {message.role === 'user' ? (
+                  message.content
+                ) : (
+                  <ReactMarkdown
+                    components={{
+                      p: ({node, ...props}) => <p style={{ margin: '0.5em 0', lineHeight: '1.6' }} {...props} />,
+                      ul: ({node, ...props}) => <ul style={{ margin: '0.5em 0', paddingLeft: '1.5em' }} {...props} />,
+                      ol: ({node, ...props}) => <ol style={{ margin: '0.5em 0', paddingLeft: '1.5em' }} {...props} />,
+                      li: ({node, ...props}) => <li style={{ margin: '0.3em 0' }} {...props} />,
+                      strong: ({node, ...props}) => <strong style={{ fontWeight: '600' }} {...props} />,
+                      em: ({node, ...props}) => <em style={{ fontStyle: 'italic' }} {...props} />,
+                      h1: ({node, ...props}) => <h1 style={{ fontSize: '1.5em', marginTop: '0.5em', marginBottom: '0.5em' }} {...props} />,
+                      h2: ({node, ...props}) => <h2 style={{ fontSize: '1.3em', marginTop: '0.5em', marginBottom: '0.5em' }} {...props} />,
+                      h3: ({node, ...props}) => <h3 style={{ fontSize: '1.1em', marginTop: '0.5em', marginBottom: '0.5em' }} {...props} />,
+                      code: ({node, inline, ...props}) =>
+                        inline ?
+                          <code style={{ background: '#e8eaf6', padding: '2px 6px', borderRadius: '4px', fontSize: '0.9em' }} {...props} /> :
+                          <code style={{ display: 'block', background: '#e8eaf6', padding: '10px', borderRadius: '6px', margin: '0.5em 0' }} {...props} />
+                    }}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                )}
               </div>
             ))
           )}
