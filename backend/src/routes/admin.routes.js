@@ -6,6 +6,7 @@ const {
   createAIInstruction,
   updateAIInstruction,
   deleteAIInstruction,
+  resetAIInstructions,
   getAdminSettings,
   updateAdminSetting,
   getCategories,
@@ -29,6 +30,7 @@ router.get('/ai-instructions', requireSuperAdmin, getAIInstructions);
 router.post('/ai-instructions', requireSuperAdmin, createAIInstruction);
 router.put('/ai-instructions/:id', requireSuperAdmin, updateAIInstruction);
 router.delete('/ai-instructions/:id', requireSuperAdmin, deleteAIInstruction);
+router.post('/ai-instructions/reset', requireSuperAdmin, resetAIInstructions);
 
 // Admin Settings (Super Admin only)
 router.get('/settings', requireSuperAdmin, getAdminSettings);

@@ -1,4 +1,5 @@
 const { pool } = require('../config/database');
+const { DEFAULT_AI_INSTRUCTIONS } = require('../config/default-ai-instructions');
 
 // Get all AI instructions
 const getAIInstructions = async (req, res) => {
@@ -85,6 +86,38 @@ const deleteAIInstruction = async (req, res) => {
   } catch (error) {
     console.error('Delete AI instruction error:', error);
     res.status(500).json({ error: { message: 'Failed to delete AI instruction' } });
+  }
+};
+
+// Reset AI instructions to defaults
+const resetAIInstructions = async (req, res) => {
+  try {
+    // Delete all existing AI instructions
+    await pool.query('DELETE FROM ft_ai_instructions');
+
+    // Insert default AI instructions
+    const insertPromises = DEFAULT_AI_INSTRUCTIONS.map(instruction => {
+      return pool.query(
+        `INSERT INTO ft_ai_instructions (instruction_type, instruction_text, priority, is_active)
+         VALUES ($1, $2, $3, $4)`,
+        [instruction.instruction_type, instruction.instruction_text, instruction.priority, instruction.is_active]
+      );
+    });
+
+    await Promise.all(insertPromises);
+
+    // Fetch the newly inserted instructions
+    const result = await pool.query(
+      `SELECT * FROM ft_ai_instructions ORDER BY priority DESC, created_at ASC`
+    );
+
+    res.json({
+      message: 'AI instructions reset to defaults successfully',
+      instructions: result.rows
+    });
+  } catch (error) {
+    console.error('Reset AI instructions error:', error);
+    res.status(500).json({ error: { message: 'Failed to reset AI instructions' } });
   }
 };
 
@@ -355,6 +388,7 @@ module.exports = {
   createAIInstruction,
   updateAIInstruction,
   deleteAIInstruction,
+  resetAIInstructions,
   getAdminSettings,
   updateAdminSetting,
   getCategories,
