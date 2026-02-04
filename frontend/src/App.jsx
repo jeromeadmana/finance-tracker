@@ -1,4 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import NProgress from 'nprogress';
+import 'nprogress/nprogress.css';
 import './App.css';
 
 // Pages
@@ -12,6 +15,9 @@ import Layout from './components/Layout';
 
 // Auth Context
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+
+// Configure NProgress
+NProgress.configure({ showSpinner: false, speed: 400, minimum: 0.1 });
 
 function PrivateRoute({ children, requireSuperAdmin = false, requireDemoUser = false }) {
   const { user, loading } = useAuth();
@@ -37,6 +43,20 @@ function PrivateRoute({ children, requireSuperAdmin = false, requireDemoUser = f
 
 function AppRoutes() {
   const { user } = useAuth();
+  const location = useLocation();
+
+  // Show loading bar on route change
+  useEffect(() => {
+    NProgress.start();
+    const timer = setTimeout(() => {
+      NProgress.done();
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      NProgress.done();
+    };
+  }, [location.pathname]);
 
   return (
     <Routes>
