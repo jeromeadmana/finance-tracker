@@ -18,23 +18,23 @@ router.get('/', async (req, res) => {
        ORDER BY b.created_at DESC`,
       [req.user.id]
     );
-    res.json({ ft_budgets: result.rows });
+    res.json({ budgets: result.rows });
   } catch (error) {
-    console.error('Get ft_budgets error:', error);
-    res.status(500).json({ error: { message: 'Failed to fetch ft_budgets' } });
+    console.error('Get budgets error:', error);
+    res.status(500).json({ error: { message: 'Failed to fetch budgets' } });
   }
 });
 
 // Create budget
 router.post('/', async (req, res) => {
   try {
-    const { categoryId, amount, period, startDate, endDate } = req.body;
+    const { category_id, amount, period, start_date, end_date } = req.body;
 
     const result = await pool.query(
       `INSERT INTO ft_budgets (user_id, category_id, amount, period, start_date, end_date)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [req.user.id, categoryId, amount, period, startDate, endDate]
+      [req.user.id, category_id, amount, period, start_date, end_date]
     );
 
     res.status(201).json({
