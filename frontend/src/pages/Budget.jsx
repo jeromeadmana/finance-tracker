@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { budgetAPI, categoryAPI, aiAPI } from '../services/api';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
+import { useAuth } from '../contexts/AuthContext';
 
 function Budget() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [budgets, setBudgets] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [showIncomeModal, setShowIncomeModal] = useState(false);
+  const [tempIncome, setTempIncome] = useState('');
   const [formData, setFormData] = useState({
     categoryId: '',
     amount: '',
@@ -61,16 +67,48 @@ function Budget() {
   };
 
   const handleAISuggestions = async () => {
+    // Check if user has income set in profile
+    if (!user?.monthlyIncome) {
+      setShowIncomeModal(true);
+      return;
+    }
+
+    // User has income in profile, proceed directly
+    await generateRecommendations(user.monthlyIncome);
+  };
+
+  const generateRecommendations = async (income) => {
     setAiLoading(true);
     try {
-      const response = await aiAPI.getBudgetRecommendations(0); // Will analyze transactions
-      alert('AI Budget Suggestions feature coming soon! The AI will analyze your spending patterns and suggest budgets.');
+      const response = await aiAPI.getBudgetRecommendations(income);
+      const recs = response.data.recommendations;
+      const source = response.data.incomeSource;
+
+      let message = `AI Budget Recommendations Generated!\n\n`;
+      message += `Based on ${source === 'profile' ? `your monthly income of $${income}` :
+                             source === 'request' ? `monthly income of $${income}` :
+                             'your spending patterns'}\n\n`;
+      message += `Recommendations:\n${JSON.stringify(recs, null, 2)}`;
+
+      alert(message);
     } catch (error) {
       console.error('Failed to get AI suggestions:', error);
-      alert('Failed to get AI suggestions');
+      alert('Failed to get AI suggestions. Please try again.');
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const handleIncomeModalSubmit = async () => {
+    const income = tempIncome ? parseFloat(tempIncome) : null;
+    setShowIncomeModal(false);
+    await generateRecommendations(income);
+    setTempIncome('');
+  };
+
+  const handleSetInProfile = () => {
+    setShowIncomeModal(false);
+    navigate('/profile');
   };
 
   if (loading) {
@@ -236,6 +274,100 @@ function Budget() {
           </div>
         )}
       </div>
+
+      {showIncomeModal && (
+        <div className="modal-overlay" onClick={() => setShowIncomeModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <h3>Monthly Income for Budget Recommendations</h3>
+            <p style={{ marginBottom: '20px' }}>To provide personalized budget recommendations, we need information about your income.</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ padding: '15px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px' }}>
+                  Enter income for this recommendation:
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={tempIncome}
+                  onChange={(e) => setTempIncome(e.target.value)}
+                  placeholder="0.00"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '6px',
+                    fontSize: '16px',
+                    marginBottom: '10px'
+                  }}
+                />
+                <button
+                  onClick={handleIncomeModalSubmit}
+                  disabled={!tempIncome}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: tempIncome ? '#667eea' : '#9ca3af',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: tempIncome ? 'pointer' : 'not-allowed',
+                    fontWeight: '600'
+                  }}
+                >
+                  Generate Recommendations
+                </button>
+              </div>
+
+              <div style={{ textAlign: 'center', color: '#6b7280', fontWeight: '500' }}>OR</div>
+
+              <div style={{ padding: '15px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                <p style={{ marginBottom: '10px', fontSize: '14px' }}>Save income to your profile for future use</p>
+                <button
+                  onClick={handleSetInProfile}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  Set in Profile
+                </button>
+              </div>
+
+              <div style={{ textAlign: 'center', color: '#6b7280', fontWeight: '500' }}>OR</div>
+
+              <div style={{ padding: '15px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                <p style={{ marginBottom: '10px', fontSize: '14px' }}>Skip if you have variable income (gig/project work)</p>
+                <button
+                  onClick={() => {
+                    setShowIncomeModal(false);
+                    generateRecommendations(null);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  Get Spending-Based Recommendations
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -9,7 +9,7 @@ const login = async (req, res) => {
 
     // Find user
     const result = await pool.query(
-      `SELECT id, email, password_hash, first_name, last_name, role, is_active
+      `SELECT id, email, password_hash, first_name, last_name, monthly_income, role, is_active
        FROM ft_users WHERE email = $1`,
       [email]
     );
@@ -48,6 +48,7 @@ const login = async (req, res) => {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
+        monthlyIncome: user.monthly_income,
         role: user.role
       },
       token
@@ -62,7 +63,7 @@ const login = async (req, res) => {
 const getCurrentUser = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, email, first_name, last_name, role, is_active, created_at
+      `SELECT id, email, first_name, last_name, monthly_income, role, is_active, created_at
        FROM ft_users WHERE id = $1`,
       [req.user.id]
     );
@@ -79,6 +80,7 @@ const getCurrentUser = async (req, res) => {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
+        monthlyIncome: user.monthly_income,
         role: user.role,
         isActive: user.is_active,
         createdAt: user.created_at

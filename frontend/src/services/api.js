@@ -58,11 +58,21 @@ export const goalAPI = {
   create: (data) => api.post('/goals', data)
 };
 
+// User APIs
+export const userAPI = {
+  getProfile: () => api.get('/users/profile'),
+  updateProfile: (data) => api.put('/users/profile', data)
+};
+
 // AI APIs
 export const aiAPI = {
   chat: (question, context) => api.post('/ai/chat', { question, context }),
-  getBudgetRecommendations: (monthlyIncome) =>
-    api.post('/ai/budget-recommendations', { monthlyIncome }),
+  getBudgetRecommendations: (monthlyIncome) => {
+    const payload = monthlyIncome !== null && monthlyIncome !== undefined
+      ? { monthlyIncome }
+      : {};
+    return api.post('/ai/budget-recommendations', payload);
+  },
   getSpendingAnalysis: (period) => api.get('/ai/spending-analysis', { params: { period } })
 };
 

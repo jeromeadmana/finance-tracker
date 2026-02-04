@@ -224,7 +224,7 @@ const getFinancialAdvice = async (userId, question, context = {}) => {
 };
 
 // Generate budget recommendations
-const generateBudgetRecommendations = async (userId, monthlyIncome) => {
+const generateBudgetRecommendations = async (userId, monthlyIncome = null) => {
   try {
     const systemPrompt = await buildSystemPrompt('budget');
 
@@ -245,15 +245,26 @@ const generateBudgetRecommendations = async (userId, monthlyIncome) => {
     );
 
     let spendingContext = '\n=== User Spending History (Last 90 days) ===\n';
+    const totalSpending = spendingResult.rows.reduce(
+      (sum, row) => sum + parseFloat(row.total_amount),
+      0
+    );
+
     spendingResult.rows.forEach(row => {
       spendingContext += `${row.category}: $${parseFloat(row.total_amount).toFixed(2)}\n`;
     });
+    spendingContext += `Total Spending (90 days): $${totalSpending.toFixed(2)}\n`;
+    spendingContext += `Average Monthly Spending: $${(totalSpending / 3).toFixed(2)}\n`;
 
-    const userPrompt = `Generate personalized budget recommendations for a user with monthly income of $${monthlyIncome}.
+    let userPrompt;
+
+    if (monthlyIncome !== null && monthlyIncome !== undefined) {
+      // User has provided or stored monthly income
+      userPrompt = `Generate personalized budget recommendations for a user with monthly income of $${monthlyIncome}.
 
 ${spendingContext}
 
-Provide budget allocations for major ft_categories (Housing, Food, Transportation, Savings, etc.) with specific dollar amounts and percentages. Be practical and consider their spending history.
+Provide budget allocations for major categories (Housing, Food, Transportation, Savings, etc.) with specific dollar amounts and percentages. Be practical and consider their spending history.
 
 Return as JSON array:
 [
@@ -261,6 +272,26 @@ Return as JSON array:
   {"category": "Food", "amount": 500, "percentage": 10},
   ...
 ]`;
+    } else {
+      // Variable income worker - no fixed monthly income
+      userPrompt = `Generate personalized budget recommendations for a user with VARIABLE INCOME (gig/project worker).
+
+${spendingContext}
+
+Since the user doesn't have fixed monthly income, provide budget recommendations based on their spending patterns. Suggest:
+1. Essential spending categories with recommended amounts based on their history
+2. Flexible spending targets
+3. Emergency fund recommendations (in months of expenses, not dollars)
+4. Tips for managing variable income
+
+Return as JSON array with practical suggestions:
+[
+  {"category": "Essential Expenses", "amount": 2000, "note": "Based on your average spending"},
+  {"category": "Emergency Fund", "amount": 6000, "note": "3 months of expenses recommended"},
+  {"category": "Variable Buffer", "amount": 500, "note": "For income fluctuations"},
+  ...
+]`;
+    }
 
     const response = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-4o',

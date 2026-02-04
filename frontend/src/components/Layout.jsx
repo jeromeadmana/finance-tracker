@@ -101,6 +101,7 @@ function Layout() {
               <li><Link to="/dashboard">Dashboard</Link></li>
               <li><Link to="/transactions">Transactions</Link></li>
               <li><Link to="/budget">Budget</Link></li>
+              <li><Link to="/profile">Profile</Link></li>
               <li><Link to="/ai-chat">AI Assistant</Link></li>
             </>
           )}

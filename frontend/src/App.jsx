@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Budget from './pages/Budget';
+import Profile from './pages/Profile';
 import AIChat from './pages/AIChat';
 import SuperAdmin from './pages/SuperAdmin';
 import Layout from './components/Layout';
@@ -79,6 +80,11 @@ function AppRoutes() {
         <Route path="budget" element={
           <PrivateRoute requireDemoUser={true}>
             <Budget />
+          </PrivateRoute>
+        } />
+        <Route path="profile" element={
+          <PrivateRoute requireDemoUser={true}>
+            <Profile />
           </PrivateRoute>
         } />
         <Route path="ai-chat" element={

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS ft_users (
     password_hash VARCHAR(255) NOT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
+    monthly_income DECIMAL(12,2) DEFAULT NULL,
     role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('super_admin', 'user')),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
