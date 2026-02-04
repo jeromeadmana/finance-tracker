@@ -245,4 +245,6 @@
   padding: 40px;
   background: #f5f7fa;
   overflow-y: auto;
+  width: 100%;
+  max-width: 100%;
 }
