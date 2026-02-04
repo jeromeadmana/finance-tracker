@@ -13,6 +13,10 @@ function Budget() {
   const [showForm, setShowForm] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [showIncomeModal, setShowIncomeModal] = useState(false);
+  const [showRecommendationsModal, setShowRecommendationsModal] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationSource, setRecommendationSource] = useState('');
+  const [incomeUsed, setIncomeUsed] = useState(null);
   const [tempIncome, setTempIncome] = useState('');
   const [formData, setFormData] = useState({
     categoryId: '',
@@ -81,29 +85,10 @@ function Budget() {
     setAiLoading(true);
     try {
       const response = await aiAPI.getBudgetRecommendations(income);
-      const recs = response.data.recommendations;
-      const source = response.data.incomeSource;
-
-      let message = `AI Budget Recommendations Generated!\n\n`;
-      message += `Based on ${source === 'profile' ? `your monthly income of $${income}` :
-                             source === 'request' ? `monthly income of $${income}` :
-                             'your spending patterns'}\n\n`;
-      message += `Recommendations:\n\n`;
-
-      // Format recommendations nicely
-      recs.forEach((rec, index) => {
-        message += `${index + 1}. ${rec.category}:\n`;
-        message += `   Amount: $${rec.amount}`;
-        if (rec.percentage) {
-          message += ` (${rec.percentage}%)`;
-        }
-        if (rec.note) {
-          message += `\n   Note: ${rec.note}`;
-        }
-        message += `\n\n`;
-      });
-
-      alert(message);
+      setRecommendations(response.data.recommendations);
+      setRecommendationSource(response.data.incomeSource);
+      setIncomeUsed(income);
+      setShowRecommendationsModal(true);
     } catch (error) {
       console.error('Failed to get AI suggestions:', error);
       alert('Failed to get AI suggestions. Please try again.');
@@ -378,6 +363,75 @@ function Budget() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showRecommendationsModal && (
+        <div className="modal-overlay" onClick={() => setShowRecommendationsModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <h3 style={{ color: '#667eea', marginTop: 0 }}>AI Budget Recommendations</h3>
+
+            <div style={{ background: '#f0f4ff', padding: '12px', borderRadius: '8px', marginBottom: '20px' }}>
+              <p style={{ margin: 0, color: '#374151', fontSize: '14px' }}>
+                {recommendationSource === 'profile' && incomeUsed && `Based on your monthly income of ${formatCurrency(incomeUsed)}`}
+                {recommendationSource === 'request' && incomeUsed && `Based on monthly income of ${formatCurrency(incomeUsed)}`}
+                {recommendationSource === 'none' && 'Based on your spending patterns'}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '25px' }}>
+              {recommendations.map((rec, index) => (
+                <div
+                  key={index}
+                  style={{
+                    background: 'white',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '15px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                    <h4 style={{ margin: 0, color: '#1f2937', fontSize: '16px' }}>
+                      {rec.category}
+                    </h4>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#667eea' }}>
+                        {formatCurrency(rec.amount)}
+                      </div>
+                      {rec.percentage && (
+                        <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                          {rec.percentage}% of budget
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {rec.note && (
+                    <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+                      {rec.note}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowRecommendationsModal(false)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '16px'
+              }}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
