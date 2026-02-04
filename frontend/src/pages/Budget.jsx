@@ -88,7 +88,20 @@ function Budget() {
       message += `Based on ${source === 'profile' ? `your monthly income of $${income}` :
                              source === 'request' ? `monthly income of $${income}` :
                              'your spending patterns'}\n\n`;
-      message += `Recommendations:\n${JSON.stringify(recs, null, 2)}`;
+      message += `Recommendations:\n\n`;
+
+      // Format recommendations nicely
+      recs.forEach((rec, index) => {
+        message += `${index + 1}. ${rec.category}:\n`;
+        message += `   Amount: $${rec.amount}`;
+        if (rec.percentage) {
+          message += ` (${rec.percentage}%)`;
+        }
+        if (rec.note) {
+          message += `\n   Note: ${rec.note}`;
+        }
+        message += `\n\n`;
+      });
 
       alert(message);
     } catch (error) {
