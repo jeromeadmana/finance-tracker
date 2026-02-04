@@ -109,7 +109,13 @@ Return ONLY a JSON object with the category_id and confidence (0-1). Example: {"
       max_tokens: 100
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    // Parse response, removing markdown code blocks if present
+    let content = response.choices[0].message.content.trim();
+    if (content.startsWith('```')) {
+      content = content.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+    }
+
+    const result = JSON.parse(content);
     return result;
   } catch (error) {
     console.error('AI categorization error:', error);
@@ -151,7 +157,13 @@ Return ONLY a JSON object. Example:
       max_tokens: 200
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    // Parse response, removing markdown code blocks if present
+    let content = response.choices[0].message.content.trim();
+    if (content.startsWith('```')) {
+      content = content.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+    }
+
+    const result = JSON.parse(content);
     return result;
   } catch (error) {
     console.error('NL parsing error:', error);
@@ -303,7 +315,15 @@ Return as JSON array with practical suggestions:
       max_tokens: 800
     });
 
-    const recommendations = JSON.parse(response.choices[0].message.content);
+    // Parse response, removing markdown code blocks if present
+    let content = response.choices[0].message.content.trim();
+
+    // Remove markdown code blocks (```json ... ``` or ``` ... ```)
+    if (content.startsWith('```')) {
+      content = content.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+    }
+
+    const recommendations = JSON.parse(content);
     return recommendations;
   } catch (error) {
     console.error('Budget recommendations error:', error);
