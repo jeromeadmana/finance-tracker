@@ -278,11 +278,12 @@ ${spendingContext}
 
 Provide budget allocations for major categories (Housing, Food, Transportation, Savings, etc.) with specific dollar amounts and percentages. Be practical and consider their spending history.
 
-Return as JSON array:
+IMPORTANT: Return ONLY a valid JSON array, no markdown formatting, no explanations, no additional text.
+
+Format:
 [
   {"category": "Housing", "amount": 1500, "percentage": 30},
-  {"category": "Food", "amount": 500, "percentage": 10},
-  ...
+  {"category": "Food", "amount": 500, "percentage": 10}
 ]`;
     } else {
       // Variable income worker - no fixed monthly income
@@ -296,12 +297,12 @@ Since the user doesn't have fixed monthly income, provide budget recommendations
 3. Emergency fund recommendations (in months of expenses, not dollars)
 4. Tips for managing variable income
 
-Return as JSON array with practical suggestions:
+IMPORTANT: Return ONLY a valid JSON array, no markdown formatting, no explanations, no additional text.
+
+Format:
 [
   {"category": "Essential Expenses", "amount": 2000, "note": "Based on your average spending"},
-  {"category": "Emergency Fund", "amount": 6000, "note": "3 months of expenses recommended"},
-  {"category": "Variable Buffer", "amount": 500, "note": "For income fluctuations"},
-  ...
+  {"category": "Emergency Fund", "amount": 6000, "note": "3 months of expenses recommended"}
 ]`;
     }
 
@@ -315,13 +316,26 @@ Return as JSON array with practical suggestions:
       max_tokens: 800
     });
 
-    // Parse response, removing markdown code blocks if present
+    // Parse response, removing markdown code blocks and extra text if present
     let content = response.choices[0].message.content.trim();
 
+    console.log('Raw AI response:', content);
+
     // Remove markdown code blocks (```json ... ``` or ``` ... ```)
-    if (content.startsWith('```')) {
-      content = content.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+    if (content.includes('```')) {
+      const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+      if (jsonMatch) {
+        content = jsonMatch[1].trim();
+      }
     }
+
+    // Try to extract JSON array if there's extra text
+    const arrayMatch = content.match(/\[[\s\S]*\]/);
+    if (arrayMatch) {
+      content = arrayMatch[0];
+    }
+
+    console.log('Cleaned content:', content);
 
     const recommendations = JSON.parse(content);
     return recommendations;
