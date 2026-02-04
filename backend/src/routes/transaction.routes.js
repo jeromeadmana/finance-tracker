@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth.middleware');
+const { checkTransactionLimit, restrictSuperAdminAccess } = require('../middleware/demo.middleware');
 const {
   getTransactions,
   getTransactionById,
@@ -14,11 +15,19 @@ const {
 // All transaction routes require authentication
 router.use(authenticateToken);
 
+// Super admin cannot access transactions
+router.use(restrictSuperAdminAccess);
+
+// GET routes (no limit check needed for reading)
 router.get('/', getTransactions);
 router.get('/stats', getTransactionStats);
 router.get('/:id', getTransactionById);
-router.post('/', createTransaction);
-router.post('/natural-language', createTransactionFromNL);
+
+// POST routes (check transaction limit before creating)
+router.post('/', checkTransactionLimit, createTransaction);
+router.post('/natural-language', checkTransactionLimit, createTransactionFromNL);
+
+// PUT and DELETE routes (no limit check needed)
 router.put('/:id', updateTransaction);
 router.delete('/:id', deleteTransaction);
 

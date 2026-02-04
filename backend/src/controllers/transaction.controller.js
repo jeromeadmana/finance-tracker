@@ -1,15 +1,15 @@
 const { pool } = require('../config/database');
 const { categorizeTransaction, parseNaturalLanguageTransaction } = require('../services/openai.service');
 
-// Get all transactions for user
+// Get all ft_transactions for user
 const getTransactions = async (req, res) => {
   try {
     const { startDate, endDate, categoryId, type } = req.query;
 
     let query = `
       SELECT t.*, c.name as category_name, c.icon as category_icon, c.color as category_color
-      FROM transactions t
-      LEFT JOIN categories c ON t.category_id = c.id
+      FROM ft_transactions t
+      LEFT JOIN ft_categories c ON t.category_id = c.id
       WHERE t.user_id = $1
     `;
     const params = [req.user.id];
@@ -43,10 +43,10 @@ const getTransactions = async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    res.json({ transactions: result.rows });
+    res.json({ ft_transactions: result.rows });
   } catch (error) {
-    console.error('Get transactions error:', error);
-    res.status(500).json({ error: { message: 'Failed to fetch transactions' } });
+    console.error('Get ft_transactions error:', error);
+    res.status(500).json({ error: { message: 'Failed to fetch ft_transactions' } });
   }
 };
 
@@ -57,8 +57,8 @@ const getTransactionById = async (req, res) => {
 
     const result = await pool.query(
       `SELECT t.*, c.name as category_name
-       FROM transactions t
-       LEFT JOIN categories c ON t.category_id = c.id
+       FROM ft_transactions t
+       LEFT JOIN ft_categories c ON t.category_id = c.id
        WHERE t.id = $1 AND t.user_id = $2`,
       [id, req.user.id]
     );
@@ -104,7 +104,7 @@ const createTransaction = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO transactions (
+      `INSERT INTO ft_transactions (
         user_id, category_id, amount, type, description, merchant,
         transaction_date, payment_method, notes, is_recurring,
         recurring_pattern, tags, ai_categorized
@@ -169,7 +169,7 @@ const createTransactionFromNL = async (req, res) => {
 
     // Create transaction
     const result = await pool.query(
-      `INSERT INTO transactions (
+      `INSERT INTO ft_transactions (
         user_id, category_id, amount, type, description, merchant,
         transaction_date, ai_categorized
       )
@@ -216,7 +216,7 @@ const updateTransaction = async (req, res) => {
     } = req.body;
 
     const result = await pool.query(
-      `UPDATE transactions
+      `UPDATE ft_transactions
        SET category_id = COALESCE($1, category_id),
            amount = COALESCE($2, amount),
            type = COALESCE($3, type),
@@ -251,7 +251,7 @@ const deleteTransaction = async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      'DELETE FROM transactions WHERE id = $1 AND user_id = $2 RETURNING id',
+      'DELETE FROM ft_transactions WHERE id = $1 AND user_id = $2 RETURNING id',
       [id, req.user.id]
     );
 
@@ -292,7 +292,7 @@ const getTransactionStats = async (req, res) => {
         SUM(amount) as total,
         COUNT(*) as count,
         AVG(amount) as average
-       FROM transactions
+       FROM ft_transactions
        WHERE user_id = $1 ${dateFilter}
        GROUP BY type`,
       params
@@ -307,8 +307,8 @@ const getTransactionStats = async (req, res) => {
         t.type,
         SUM(t.amount) as total,
         COUNT(*) as count
-       FROM transactions t
-       LEFT JOIN categories c ON t.category_id = c.id
+       FROM ft_transactions t
+       LEFT JOIN ft_categories c ON t.category_id = c.id
        WHERE t.user_id = $1 ${dateFilter}
        GROUP BY c.name, c.icon, c.color, t.type
        ORDER BY total DESC`,
@@ -321,7 +321,7 @@ const getTransactionStats = async (req, res) => {
         DATE_TRUNC('month', transaction_date) as month,
         type,
         SUM(amount) as total
-       FROM transactions
+       FROM ft_transactions
        WHERE user_id = $1 ${dateFilter}
        GROUP BY month, type
        ORDER BY month DESC`,

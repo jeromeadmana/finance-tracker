@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth.middleware');
+const { restrictSuperAdminAccess } = require('../middleware/demo.middleware');
 const {
   getFinancialAdvice,
   generateBudgetRecommendations,
@@ -8,6 +9,7 @@ const {
 } = require('../services/openai.service');
 
 router.use(authenticateToken);
+router.use(restrictSuperAdminAccess);
 
 // AI Financial Advice Chatbot
 router.post('/chat', async (req, res) => {

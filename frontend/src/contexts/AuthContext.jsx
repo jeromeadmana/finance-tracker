@@ -51,21 +51,6 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
-  const register = async (email, password, firstName, lastName) => {
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/register`, {
-      email,
-      password,
-      firstName,
-      lastName
-    });
-
-    const { token: newToken, user: userData } = response.data;
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
-    setUser(userData);
-    return response.data;
-  };
-
   const logout = () => {
     localStorage.removeItem('token');
     setToken(null);
@@ -73,7 +58,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

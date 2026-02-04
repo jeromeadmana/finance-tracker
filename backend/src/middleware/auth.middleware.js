@@ -15,7 +15,7 @@ const authenticateToken = async (req, res, next) => {
 
     // Fetch user from database to ensure they still exist and are active
     const result = await pool.query(
-      'SELECT id, email, role, is_active FROM users WHERE id = $1',
+      'SELECT id, email, role, is_active FROM ft_users WHERE id = $1',
       [decoded.userId]
     );
 
@@ -62,8 +62,8 @@ const requireRole = (...roles) => {
 // Super admin only
 const requireSuperAdmin = requireRole('super_admin');
 
-// Admin or super admin
-const requireAdmin = requireRole('admin', 'super_admin');
+// Super admin only (no 'admin' role in simplified auth)
+const requireAdmin = requireRole('super_admin');
 
 module.exports = {
   authenticateToken,

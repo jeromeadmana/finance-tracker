@@ -10,7 +10,7 @@ const getAdminInstructions = async () => {
   try {
     const result = await pool.query(
       `SELECT instruction_type, instruction_text, priority
-       FROM ai_instructions
+       FROM ft_ai_instructions
        WHERE is_active = true
        ORDER BY priority DESC, created_at ASC`
     );
@@ -26,7 +26,7 @@ const getAdminInstructions = async () => {
 const getAdminSettings = async () => {
   try {
     const result = await pool.query(
-      'SELECT setting_key, setting_value FROM admin_settings'
+      'SELECT setting_key, setting_value FROM ft_admin_settings'
     );
 
     const settings = {};
@@ -71,12 +71,12 @@ const categorizeTransaction = async (description, amount, merchant = null) => {
       return null;
     }
 
-    // Get categories
-    const categoriesResult = await pool.query(
-      `SELECT id, name, type FROM categories WHERE type = 'expense' ORDER BY name`
+    // Get ft_categories
+    const ft_categoriesResult = await pool.query(
+      `SELECT id, name, type FROM ft_categories WHERE type = 'expense' ORDER BY name`
     );
 
-    const categories = categoriesResult.rows.map(cat => ({
+    const ft_categories = ft_categoriesResult.rows.map(cat => ({
       id: cat.id,
       name: cat.name
     }));
@@ -87,8 +87,8 @@ Description: ${description}
 Amount: $${amount}
 ${merchant ? `Merchant: ${merchant}` : ''}
 
-Available categories:
-${categories.map(cat => `- ${cat.name} (ID: ${cat.id})`).join('\n')}
+Available ft_categories:
+${ft_categories.map(cat => `- ${cat.name} (ID: ${cat.id})`).join('\n')}
 
 Return ONLY a JSON object with the category_id and confidence (0-1). Example: {"category_id": "uuid-here", "confidence": 0.95}`;
 
@@ -165,20 +165,20 @@ const getFinancialAdvice = async (userId, question, context = {}) => {
     }
 
     // Get user's transaction summary for context
-    const transactionsResult = await pool.query(
+    const ft_transactionsResult = await pool.query(
       `SELECT
         type,
         SUM(amount) as total,
         COUNT(*) as count
-       FROM transactions
+       FROM ft_transactions
        WHERE user_id = $1 AND transaction_date >= CURRENT_DATE - INTERVAL '30 days'
        GROUP BY type`,
       [userId]
     );
 
     let userContext = '\n=== User Financial Context (Last 30 days) ===\n';
-    transactionsResult.rows.forEach(row => {
-      userContext += `${row.type}: $${parseFloat(row.total).toFixed(2)} (${row.count} transactions)\n`;
+    ft_transactionsResult.rows.forEach(row => {
+      userContext += `${row.type}: $${parseFloat(row.total).toFixed(2)} (${row.count} ft_transactions)\n`;
     });
 
     const systemPrompt = await buildSystemPrompt('financial_advice');
@@ -201,7 +201,7 @@ const getFinancialAdvice = async (userId, question, context = {}) => {
 
     // Save to chat history
     await pool.query(
-      `INSERT INTO ai_chat_history (user_id, message, response, tokens_used, context)
+      `INSERT INTO ft_ai_chat_history (user_id, message, response, tokens_used, context)
        VALUES ($1, $2, $3, $4, $5)`,
       [userId, question, answer, tokensUsed, JSON.stringify(context)]
     );
@@ -227,8 +227,8 @@ const generateBudgetRecommendations = async (userId, monthlyIncome) => {
         c.name as category,
         AVG(t.amount) as avg_amount,
         SUM(t.amount) as total_amount
-       FROM transactions t
-       JOIN categories c ON t.category_id = c.id
+       FROM ft_transactions t
+       JOIN ft_categories c ON t.category_id = c.id
        WHERE t.user_id = $1
          AND t.type = 'expense'
          AND t.transaction_date >= CURRENT_DATE - INTERVAL '90 days'
@@ -246,7 +246,7 @@ const generateBudgetRecommendations = async (userId, monthlyIncome) => {
 
 ${spendingContext}
 
-Provide budget allocations for major categories (Housing, Food, Transportation, Savings, etc.) with specific dollar amounts and percentages. Be practical and consider their spending history.
+Provide budget allocations for major ft_categories (Housing, Food, Transportation, Savings, etc.) with specific dollar amounts and percentages. Be practical and consider their spending history.
 
 Return as JSON array:
 [
@@ -279,14 +279,14 @@ const analyzeSpendingPatterns = async (userId, period = 'month') => {
     const systemPrompt = await buildSystemPrompt('financial_advice');
 
     // Get detailed transaction data
-    const transactionsResult = await pool.query(
+    const ft_transactionsResult = await pool.query(
       `SELECT
         t.amount,
         t.description,
         t.transaction_date,
         c.name as category
-       FROM transactions t
-       LEFT JOIN categories c ON t.category_id = c.id
+       FROM ft_transactions t
+       LEFT JOIN ft_categories c ON t.category_id = c.id
        WHERE t.user_id = $1
          AND t.type = 'expense'
          AND t.transaction_date >= CURRENT_DATE - INTERVAL '1 ${period}'
@@ -294,16 +294,16 @@ const analyzeSpendingPatterns = async (userId, period = 'month') => {
       [userId]
     );
 
-    const transactions = transactionsResult.rows;
-    const totalSpent = transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    const ft_transactions = ft_transactionsResult.rows;
+    const totalSpent = ft_transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
     const userPrompt = `Analyze the following spending data and provide insights:
 
 Total Spent: $${totalSpent.toFixed(2)}
-Number of Transactions: ${transactions.length}
+Number of Transactions: ${ft_transactions.length}
 
 Top Transactions:
-${transactions.slice(0, 20).map(t =>
+${ft_transactions.slice(0, 20).map(t =>
   `- $${parseFloat(t.amount).toFixed(2)} on ${t.description} (${t.category || 'Uncategorized'}) - ${t.transaction_date}`
 ).join('\n')}
 
@@ -326,7 +326,7 @@ Provide:
     return {
       analysis: response.choices[0].message.content,
       totalSpent,
-      transactionCount: transactions.length
+      transactionCount: ft_transactions.length
     };
   } catch (error) {
     console.error('Spending analysis error:', error);

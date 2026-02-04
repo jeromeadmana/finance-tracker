@@ -1,15 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth.middleware');
+const { restrictSuperAdminAccess } = require('../middleware/demo.middleware');
 const { pool } = require('../config/database');
 
 router.use(authenticateToken);
+router.use(restrictSuperAdminAccess);
 
 // Get user goals
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM financial_goals
+      `SELECT * FROM ft_financial_goals
        WHERE user_id = $1
        ORDER BY created_at DESC`,
       [req.user.id]
@@ -27,7 +29,7 @@ router.post('/', async (req, res) => {
     const { title, description, targetAmount, targetDate } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO financial_goals (user_id, title, description, target_amount, target_date)
+      `INSERT INTO ft_financial_goals (user_id, title, description, target_amount, target_date)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [req.user.id, title, description, targetAmount, targetDate]

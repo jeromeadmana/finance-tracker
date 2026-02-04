@@ -3,7 +3,6 @@ import './App.css';
 
 // Pages
 import Login from './pages/Login';
-import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Budget from './pages/Budget';
@@ -14,7 +13,7 @@ import Layout from './components/Layout';
 // Auth Context
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-function PrivateRoute({ children, requireSuperAdmin = false }) {
+function PrivateRoute({ children, requireSuperAdmin = false, requireDemoUser = false }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -26,24 +25,47 @@ function PrivateRoute({ children, requireSuperAdmin = false }) {
   }
 
   if (requireSuperAdmin && user.role !== 'super_admin') {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/super-admin" />;
+  }
+
+  if (requireDemoUser && user.role === 'super_admin') {
+    return <Navigate to="/super-admin" />;
   }
 
   return children;
 }
 
 function AppRoutes() {
+  const { user } = useAuth();
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
 
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-        <Route index element={<Navigate to="/dashboard" />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="transactions" element={<Transactions />} />
-        <Route path="budget" element={<Budget />} />
-        <Route path="ai-chat" element={<AIChat />} />
+        <Route index element={
+          <Navigate to={user?.role === 'super_admin' ? '/super-admin' : '/dashboard'} />
+        } />
+        <Route path="dashboard" element={
+          <PrivateRoute requireDemoUser={true}>
+            <Dashboard />
+          </PrivateRoute>
+        } />
+        <Route path="transactions" element={
+          <PrivateRoute requireDemoUser={true}>
+            <Transactions />
+          </PrivateRoute>
+        } />
+        <Route path="budget" element={
+          <PrivateRoute requireDemoUser={true}>
+            <Budget />
+          </PrivateRoute>
+        } />
+        <Route path="ai-chat" element={
+          <PrivateRoute requireDemoUser={true}>
+            <AIChat />
+          </PrivateRoute>
+        } />
         <Route
           path="super-admin"
           element={

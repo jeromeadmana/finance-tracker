@@ -66,6 +66,12 @@ export const aiAPI = {
   getSpendingAnalysis: (period) => api.get('/ai/spending-analysis', { params: { period } })
 };
 
+// Demo APIs
+export const demoAPI = {
+  getStats: () => api.get('/demo/stats'),
+  resetData: () => api.delete('/demo/reset')
+};
+
 // Admin APIs
 export const adminAPI = {
   // AI Instructions

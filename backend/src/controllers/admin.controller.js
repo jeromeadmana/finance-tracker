@@ -4,7 +4,7 @@ const { pool } = require('../config/database');
 const getAIInstructions = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM ai_instructions ORDER BY priority DESC, created_at ASC`
+      `SELECT * FROM ft_ai_instructions ORDER BY priority DESC, created_at ASC`
     );
 
     res.json({ instructions: result.rows });
@@ -20,7 +20,7 @@ const createAIInstruction = async (req, res) => {
     const { instructionType, instructionText, priority, isActive } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO ai_instructions (instruction_type, instruction_text, priority, is_active, created_by)
+      `INSERT INTO ft_ai_instructions (instruction_type, instruction_text, priority, is_active, created_by)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [instructionType, instructionText, priority || 0, isActive !== false, req.user.id]
@@ -43,7 +43,7 @@ const updateAIInstruction = async (req, res) => {
     const { instructionType, instructionText, priority, isActive } = req.body;
 
     const result = await pool.query(
-      `UPDATE ai_instructions
+      `UPDATE ft_ai_instructions
        SET instruction_type = COALESCE($1, instruction_type),
            instruction_text = COALESCE($2, instruction_text),
            priority = COALESCE($3, priority),
@@ -73,7 +73,7 @@ const deleteAIInstruction = async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      'DELETE FROM ai_instructions WHERE id = $1 RETURNING id',
+      'DELETE FROM ft_ai_instructions WHERE id = $1 RETURNING id',
       [id]
     );
 
@@ -92,7 +92,7 @@ const deleteAIInstruction = async (req, res) => {
 const getAdminSettings = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM admin_settings ORDER BY setting_key'
+      'SELECT * FROM ft_admin_settings ORDER BY setting_key'
     );
 
     res.json({ settings: result.rows });
@@ -108,7 +108,7 @@ const updateAdminSetting = async (req, res) => {
     const { settingKey, settingValue, description } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO admin_settings (setting_key, setting_value, description, created_by)
+      `INSERT INTO ft_admin_settings (setting_key, setting_value, description, created_by)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (setting_key)
        DO UPDATE SET setting_value = $2, description = $3, updated_at = CURRENT_TIMESTAMP
@@ -126,17 +126,17 @@ const updateAdminSetting = async (req, res) => {
   }
 };
 
-// Get all categories
+// Get all ft_categories
 const getCategories = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM categories ORDER BY type, name`
+      `SELECT * FROM ft_categories ORDER BY type, name`
     );
 
-    res.json({ categories: result.rows });
+    res.json({ ft_categories: result.rows });
   } catch (error) {
-    console.error('Get categories error:', error);
-    res.status(500).json({ error: { message: 'Failed to fetch categories' } });
+    console.error('Get ft_categories error:', error);
+    res.status(500).json({ error: { message: 'Failed to fetch ft_categories' } });
   }
 };
 
@@ -146,7 +146,7 @@ const createCategory = async (req, res) => {
     const { name, type, icon, color, parentId } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO categories (name, type, icon, color, parent_id, is_system, created_by)
+      `INSERT INTO ft_categories (name, type, icon, color, parent_id, is_system, created_by)
        VALUES ($1, $2, $3, $4, $5, false, $6)
        RETURNING *`,
       [name, type, icon, color, parentId, req.user.id]
@@ -169,7 +169,7 @@ const updateCategory = async (req, res) => {
     const { name, type, icon, color, parentId } = req.body;
 
     const result = await pool.query(
-      `UPDATE categories
+      `UPDATE ft_categories
        SET name = COALESCE($1, name),
            type = COALESCE($2, type),
            icon = COALESCE($3, icon),
@@ -199,8 +199,8 @@ const getCategoryRules = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT cr.*, c.name as category_name
-       FROM category_rules cr
-       JOIN categories c ON cr.category_id = c.id
+       FROM ft_category_rules cr
+       JOIN ft_categories c ON cr.category_id = c.id
        ORDER BY cr.priority DESC, cr.created_at`
     );
 
@@ -217,7 +217,7 @@ const createCategoryRule = async (req, res) => {
     const { categoryId, pattern, ruleType, priority, isActive } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO category_rules (category_id, pattern, rule_type, priority, is_active, created_by)
+      `INSERT INTO ft_category_rules (category_id, pattern, rule_type, priority, is_active, created_by)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [categoryId, pattern, ruleType || 'keyword', priority || 0, isActive !== false, req.user.id]
@@ -237,7 +237,7 @@ const createCategoryRule = async (req, res) => {
 const getBudgetTemplates = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM budget_templates ORDER BY is_default DESC, name`
+      `SELECT * FROM ft_budget_templates ORDER BY is_default DESC, name`
     );
 
     res.json({ templates: result.rows });
@@ -253,7 +253,7 @@ const createBudgetTemplate = async (req, res) => {
     const { name, description, templateData, isDefault } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO budget_templates (name, description, template_data, is_default, created_by)
+      `INSERT INTO ft_budget_templates (name, description, template_data, is_default, created_by)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [name, description, JSON.stringify(templateData), isDefault || false, req.user.id]
@@ -273,7 +273,7 @@ const createBudgetTemplate = async (req, res) => {
 const getAIPrompts = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM ai_prompts WHERE is_active = true ORDER BY category, title`
+      `SELECT * FROM ft_ai_prompts WHERE is_active = true ORDER BY category, title`
     );
 
     res.json({ prompts: result.rows });
@@ -289,7 +289,7 @@ const createAIPrompt = async (req, res) => {
     const { title, description, promptText, category, isActive } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO ai_prompts (title, description, prompt_text, category, is_active, created_by)
+      `INSERT INTO ft_ai_prompts (title, description, prompt_text, category, is_active, created_by)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [title, description, promptText, category, isActive !== false, req.user.id]
@@ -305,19 +305,19 @@ const createAIPrompt = async (req, res) => {
   }
 };
 
-// Get all users (admin only)
+// Get all ft_users (admin only)
 const getAllUsers = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, email, first_name, last_name, role, is_active, created_at
-       FROM users
+       FROM ft_users
        ORDER BY created_at DESC`
     );
 
-    res.json({ users: result.rows });
+    res.json({ ft_users: result.rows });
   } catch (error) {
-    console.error('Get all users error:', error);
-    res.status(500).json({ error: { message: 'Failed to fetch users' } });
+    console.error('Get all ft_users error:', error);
+    res.status(500).json({ error: { message: 'Failed to fetch ft_users' } });
   }
 };
 
@@ -332,7 +332,7 @@ const updateUserRole = async (req, res) => {
     }
 
     const result = await pool.query(
-      `UPDATE users SET role = $1 WHERE id = $2 RETURNING id, email, role`,
+      `UPDATE ft_users SET role = $1 WHERE id = $2 RETURNING id, email, role`,
       [role, userId]
     );
 

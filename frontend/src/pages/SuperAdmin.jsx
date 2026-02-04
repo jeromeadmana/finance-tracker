@@ -1,22 +1,22 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../services/api';
+import './SuperAdmin.css';
 
 function SuperAdmin() {
-  const [activeTab, setActiveTab] = useState('instructions');
   const [aiInstructions, setAiInstructions] = useState([]);
-  const [settings, setSettings] = useState([]);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formData, setFormData] = useState({
+    instructionType: 'global',
+    instructionText: '',
+    priority: 0,
+    isActive: true
+  });
 
   useEffect(() => {
-    if (activeTab === 'instructions') {
-      fetchAIInstructions();
-    } else if (activeTab === 'settings') {
-      fetchSettings();
-    } else if (activeTab === 'users') {
-      fetchUsers();
-    }
-  }, [activeTab]);
+    fetchAIInstructions();
+  }, []);
 
   const fetchAIInstructions = async () => {
     setLoading(true);
@@ -30,172 +30,233 @@ function SuperAdmin() {
     }
   };
 
-  const fetchSettings = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
+
     try {
-      const response = await adminAPI.getSettings();
-      setSettings(response.data.settings);
+      if (editingId) {
+        await adminAPI.updateAIInstruction(editingId, formData);
+      } else {
+        await adminAPI.createAIInstruction(formData);
+      }
+
+      fetchAIInstructions();
+      resetForm();
     } catch (error) {
-      console.error('Failed to fetch settings:', error);
+      console.error('Failed to save AI instruction:', error);
+      alert('Failed to save instruction. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchUsers = async () => {
+  const handleEdit = (instruction) => {
+    setEditingId(instruction.id);
+    setFormData({
+      instructionType: instruction.instruction_type,
+      instructionText: instruction.instruction_text,
+      priority: instruction.priority,
+      isActive: instruction.is_active
+    });
+    setShowAddForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this instruction?')) {
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await adminAPI.getAllUsers();
-      setUsers(response.data.users);
+      await adminAPI.deleteAIInstruction(id);
+      fetchAIInstructions();
     } catch (error) {
-      console.error('Failed to fetch users:', error);
+      console.error('Failed to delete AI instruction:', error);
+      alert('Failed to delete instruction. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFormData({
+      instructionType: 'global',
+      instructionText: '',
+      priority: 0,
+      isActive: true
+    });
+    setShowAddForm(false);
+  };
+
+  const instructionTypes = [
+    { value: 'global', label: 'Global Behavior' },
+    { value: 'financial_advice', label: 'Financial Advice' },
+    { value: 'categorization', label: 'Transaction Categorization' },
+    { value: 'budget', label: 'Budget Recommendations' }
+  ];
 
   return (
-    <div>
-      <h1>Super Admin Panel</h1>
-
-      <div style={{ marginTop: '20px' }}>
-        <div style={{ display: 'flex', gap: '10px', borderBottom: '2px solid #eee', marginBottom: '20px' }}>
-          <button
-            onClick={() => setActiveTab('instructions')}
-            style={{
-              padding: '12px 24px',
-              background: activeTab === 'instructions' ? '#667eea' : 'transparent',
-              color: activeTab === 'instructions' ? 'white' : '#666',
-              border: 'none',
-              borderBottom: activeTab === 'instructions' ? '3px solid #667eea' : 'none',
-              cursor: 'pointer',
-              fontWeight: '600'
-            }}
-          >
-            AI Instructions
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            style={{
-              padding: '12px 24px',
-              background: activeTab === 'settings' ? '#667eea' : 'transparent',
-              color: activeTab === 'settings' ? 'white' : '#666',
-              border: 'none',
-              borderBottom: activeTab === 'settings' ? '3px solid #667eea' : 'none',
-              cursor: 'pointer',
-              fontWeight: '600'
-            }}
-          >
-            Settings
-          </button>
-          <button
-            onClick={() => setActiveTab('users')}
-            style={{
-              padding: '12px 24px',
-              background: activeTab === 'users' ? '#667eea' : 'transparent',
-              color: activeTab === 'users' ? 'white' : '#666',
-              border: 'none',
-              borderBottom: activeTab === 'users' ? '3px solid #667eea' : 'none',
-              cursor: 'pointer',
-              fontWeight: '600'
-            }}
-          >
-            Users
-          </button>
+    <div className="super-admin">
+      <div className="admin-header">
+        <div>
+          <h1>AI Instructions Management</h1>
+          <p className="subtitle">Configure global AI behavior for all users</p>
         </div>
+        {!showAddForm && (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="btn-primary"
+          >
+            + Add New Instruction
+          </button>
+        )}
+      </div>
 
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            {activeTab === 'instructions' && (
-              <div>
-                <h2>AI Instructions</h2>
-                <p style={{ color: '#666', marginBottom: '20px' }}>Configure global AI behavior for all users</p>
-                {aiInstructions.map((instruction) => (
-                  <div key={instruction.id} style={{ padding: '15px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                      <div>
-                        <h4 style={{ margin: '0 0 5px 0', color: '#667eea' }}>{instruction.instruction_type}</h4>
-                        <p style={{ margin: 0, color: '#333' }}>{instruction.instruction_text}</p>
-                        <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#999' }}>
-                          Priority: {instruction.priority} | Status: {instruction.is_active ? 'Active' : 'Inactive'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+      {showAddForm && (
+        <div className="instruction-form-card">
+          <h2>{editingId ? 'Edit Instruction' : 'Add New Instruction'}</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Instruction Type</label>
+              <select
+                value={formData.instructionType}
+                onChange={(e) => setFormData({ ...formData, instructionType: e.target.value })}
+                required
+              >
+                {instructionTypes.map(type => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
                 ))}
-              </div>
-            )}
+              </select>
+            </div>
 
-            {activeTab === 'settings' && (
-              <div>
-                <h2>System Settings</h2>
-                <p style={{ color: '#666', marginBottom: '20px' }}>Configure system-wide settings</p>
-                {settings.map((setting) => (
-                  <div key={setting.id} style={{ padding: '15px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <h4 style={{ margin: '0 0 5px 0' }}>{setting.setting_key}</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>{setting.description}</p>
-                      </div>
-                      <div style={{ fontWeight: 'bold', color: '#667eea' }}>{setting.setting_value}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="form-group">
+              <label>Instruction Text</label>
+              <textarea
+                value={formData.instructionText}
+                onChange={(e) => setFormData({ ...formData, instructionText: e.target.value })}
+                required
+                rows={6}
+                placeholder="Enter the instruction that will guide the AI's behavior..."
+              />
+            </div>
 
-            {activeTab === 'users' && (
-              <div>
-                <h2>User Management</h2>
-                <p style={{ color: '#666', marginBottom: '20px' }}>Manage user accounts and roles</p>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
-                      <th style={{ padding: '12px' }}>Email</th>
-                      <th style={{ padding: '12px' }}>Name</th>
-                      <th style={{ padding: '12px' }}>Role</th>
-                      <th style={{ padding: '12px' }}>Status</th>
-                      <th style={{ padding: '12px' }}>Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user) => (
-                      <tr key={user.id} style={{ borderBottom: '1px solid #eee' }}>
-                        <td style={{ padding: '12px' }}>{user.email}</td>
-                        <td style={{ padding: '12px' }}>{user.first_name} {user.last_name}</td>
-                        <td style={{ padding: '12px' }}>
-                          <span style={{
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            background: user.role === 'super_admin' ? '#fef3c7' : user.role === 'admin' ? '#dbeafe' : '#f3f4f6',
-                            color: user.role === 'super_admin' ? '#92400e' : user.role === 'admin' ? '#1e40af' : '#1f2937'
-                          }}>
-                            {user.role}
-                          </span>
-                        </td>
-                        <td style={{ padding: '12px' }}>
-                          <span style={{
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            background: user.is_active ? '#d1fae5' : '#fee2e2',
-                            color: user.is_active ? '#065f46' : '#991b1b'
-                          }}>
-                            {user.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '12px' }}>{new Date(user.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Priority</label>
+                <input
+                  type="number"
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) })}
+                  min="0"
+                  max="100"
+                />
+                <small>Higher priority instructions are applied first</small>
               </div>
-            )}
+
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  />
+                  <span>Active</span>
+                </label>
+                <small>Only active instructions are used by the AI</small>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                onClick={resetForm}
+                disabled={loading}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary"
+              >
+                {loading ? 'Saving...' : editingId ? 'Update Instruction' : 'Create Instruction'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="instructions-list">
+        {loading && !showAddForm && <div className="loading">Loading...</div>}
+
+        {!loading && aiInstructions.length === 0 && (
+          <div className="empty-state">
+            <p>No AI instructions configured yet.</p>
+            <button onClick={() => setShowAddForm(true)} className="btn-primary">
+              Create First Instruction
+            </button>
           </div>
         )}
+
+        {aiInstructions.map(instruction => (
+          <div key={instruction.id} className={`instruction-card ${!instruction.is_active ? 'inactive' : ''}`}>
+            <div className="instruction-header">
+              <div>
+                <span className="instruction-type-badge">
+                  {instructionTypes.find(t => t.value === instruction.instruction_type)?.label}
+                </span>
+                <span className={`status-badge ${instruction.is_active ? 'active' : 'inactive'}`}>
+                  {instruction.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              <div className="instruction-actions">
+                <button
+                  onClick={() => handleEdit(instruction)}
+                  className="btn-icon"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={() => handleDelete(instruction.id)}
+                  className="btn-icon danger"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+
+            <div className="instruction-content">
+              <p>{instruction.instruction_text}</p>
+            </div>
+
+            <div className="instruction-footer">
+              <span>Priority: {instruction.priority}</span>
+              <span>Created: {new Date(instruction.created_at).toLocaleDateString()}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="info-box">
+        <h3>About AI Instructions</h3>
+        <p>
+          AI Instructions control how the AI assistant behaves across the entire application.
+          These instructions are applied to all AI features including transaction categorization,
+          financial advice, and budget recommendations.
+        </p>
+        <ul>
+          <li><strong>Global:</strong> General behavior and personality of the AI</li>
+          <li><strong>Financial Advice:</strong> Guidelines for providing financial guidance</li>
+          <li><strong>Categorization:</strong> Rules for categorizing transactions</li>
+          <li><strong>Budget:</strong> Principles for budget recommendations</li>
+        </ul>
       </div>
     </div>
   );

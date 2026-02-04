@@ -2,21 +2,33 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 // Database configuration for Aiven PostgreSQL
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DB_SSL === 'true' ? {
-    rejectUnauthorized: false
-  } : false,
-  // Alternative configuration if not using connection string
-  // host: process.env.DB_HOST,
-  // port: process.env.DB_PORT,
-  // database: process.env.DB_NAME,
-  // user: process.env.DB_USER,
-  // password: process.env.DB_PASSWORD,
+// Important: When using Aiven or other services with self-signed certificates,
+// we need to explicitly set rejectUnauthorized to false
+const config = {
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
-});
+};
+
+// If we have a connection string, use it but ensure SSL is configured properly
+if (process.env.DATABASE_URL) {
+  // Remove any existing sslmode from the connection string and add our own
+  let connectionString = process.env.DATABASE_URL;
+
+  // Remove sslmode if it exists
+  connectionString = connectionString.replace(/[?&]sslmode=[^&]*/g, '');
+
+  config.connectionString = connectionString;
+
+  // Set SSL configuration for Aiven/self-signed certificates
+  if (process.env.DB_SSL === 'true') {
+    config.ssl = {
+      rejectUnauthorized: false
+    };
+  }
+}
+
+const pool = new Pool(config);
 
 // Test database connection
 pool.on('connect', () => {
