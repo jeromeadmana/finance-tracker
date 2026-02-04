@@ -79,6 +79,7 @@ export const adminAPI = {
   createAIInstruction: (data) => api.post('/admin/ai-instructions', data),
   updateAIInstruction: (id, data) => api.put(`/admin/ai-instructions/${id}`, data),
   deleteAIInstruction: (id) => api.delete(`/admin/ai-instructions/${id}`),
+  resetAIInstructions: () => api.post('/admin/ai-instructions/reset'),
 
   // Settings
   getSettings: () => api.get('/admin/settings'),

@@ -90,6 +90,24 @@ function SuperAdmin() {
     setShowAddForm(false);
   };
 
+  const handleResetToDefaults = async () => {
+    if (!window.confirm('Are you sure you want to reset all AI instructions to factory defaults? This will delete all custom instructions.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await adminAPI.resetAIInstructions();
+      fetchAIInstructions();
+      alert('AI instructions reset to defaults successfully!');
+    } catch (error) {
+      console.error('Failed to reset AI instructions:', error);
+      alert('Failed to reset instructions. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const instructionTypes = [
     { value: 'global', label: 'Global Behavior' },
     { value: 'financial_advice', label: 'Financial Advice' },
@@ -257,6 +275,19 @@ function SuperAdmin() {
           <li><strong>Categorization:</strong> Rules for categorizing transactions</li>
           <li><strong>Budget:</strong> Principles for budget recommendations</li>
         </ul>
+        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+          <button
+            onClick={handleResetToDefaults}
+            disabled={loading}
+            className="btn-secondary"
+            style={{ width: '100%', background: '#ef4444', color: 'white' }}
+          >
+            🔄 Reset to Factory Defaults
+          </button>
+          <small style={{ display: 'block', marginTop: '8px', color: '#666', textAlign: 'center' }}>
+            This will delete all custom instructions and restore the 4 default prompts
+          </small>
+        </div>
       </div>
     </div>
   );
