@@ -32,6 +32,19 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root redirect to frontend (production only)
+app.get('/', (req, res) => {
+  if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
+    res.redirect(`${process.env.FRONTEND_URL}/login`);
+  } else {
+    res.json({
+      status: 'ok',
+      message: 'Finance Tracker API',
+      environment: process.env.NODE_ENV || 'development'
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
