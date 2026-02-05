@@ -175,6 +175,9 @@ const PORT = process.env.PORT || 5000;
 
 ## Part 3: Environment Variables Setup
 
+### Why Environment Variables Matter
+Environment variables keep sensitive data out of your code and allow configuration without redeployment.
+
 ### Frontend Environment Variables (Vercel Dashboard)
 ```
 VITE_API_URL=https://your-backend.vercel.app
@@ -188,6 +191,7 @@ FRONTEND_URL=https://your-frontend.vercel.app
 
 # Database (use connection string from your provider)
 DATABASE_URL=postgresql://user:password@host:5432/database?ssl=true
+DB_SSL=true
 
 # JWT
 JWT_SECRET=your-super-secure-secret-key-change-this
@@ -195,7 +199,26 @@ JWT_SECRET=your-super-secure-secret-key-change-this
 # OpenAI
 OPENAI_API_KEY=sk-your-openai-api-key
 OPENAI_MODEL=gpt-4o
+
+# Super Admin Credentials
+SUPER_ADMIN_EMAIL=admin@yourdomain.com
+SUPER_ADMIN_PASSWORD=your-secure-admin-password
 ```
+
+### Environment Variables Explained:
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `NODE_ENV` | Yes | Enables production optimizations |
+| `PORT` | Yes | Vercel assigns this automatically |
+| `FRONTEND_URL` | Yes | CORS - allows frontend to access backend |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `DB_SSL` | Yes | Enables SSL for production database |
+| `JWT_SECRET` | Yes | Signs authentication tokens |
+| `OPENAI_API_KEY` | Yes | Enables AI features |
+| `OPENAI_MODEL` | Recommended | Control AI model without code changes |
+| `SUPER_ADMIN_EMAIL` | Recommended | Admin account creation |
+| `SUPER_ADMIN_PASSWORD` | Recommended | Admin account creation |
 
 ---
 
