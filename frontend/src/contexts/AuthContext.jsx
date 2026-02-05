@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/auth/me`, {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(response.data.user);
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
       email,
       password
     });
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     const response = await axios.put(
-      `${import.meta.env.VITE_API_URL}/users/profile`,
+      `${import.meta.env.VITE_API_URL}/api/users/profile`,
       profileData,
       { headers: { Authorization: `Bearer ${token}` } }
     );
