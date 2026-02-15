@@ -8,6 +8,7 @@
     "dev": "nodemon src/server.js",
     "init-schema": "node src/config/run-schema.js",
     "init-demo": "node src/config/init-demo-users.js",
+    "init-sample-data": "node src/config/init-sample-data.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

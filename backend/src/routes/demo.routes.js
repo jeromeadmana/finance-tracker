@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken, requireRole } = require('../middleware/auth.middleware');
 const { pool } = require('../config/database');
+const { insertSampleData } = require('../config/sample-data-helper');
 
 // Apply authentication to all routes
 router.use(authenticateToken);
@@ -38,7 +39,7 @@ router.get('/stats', requireRole('user'), async (req, res) => {
   }
 });
 
-// Delete all demo user data
+// Delete all demo user data and repopulate with sample data
 router.delete('/reset', requireRole('user'), async (req, res) => {
   try {
     const userId = req.user.id;
@@ -53,24 +54,32 @@ router.delete('/reset', requireRole('user'), async (req, res) => {
     await pool.query('DELETE FROM ft_budgets WHERE user_id = $1', [userId]);
     await pool.query('DELETE FROM ft_financial_goals WHERE user_id = $1', [userId]);
 
+    // Insert fresh sample data
+    const sampleDataResult = await insertSampleData(userId);
+
     // Commit transaction
     await pool.query('COMMIT');
 
     res.json({
-      message: 'All demo data has been successfully deleted',
+      message: 'Demo data has been reset with fresh sample transactions',
       deletedData: {
         transactions: true,
         budgets: true,
         goals: true,
         chatHistory: true,
         receipts: true
+      },
+      sampleDataInserted: {
+        success: sampleDataResult.success,
+        transactionsCreated: sampleDataResult.successCount || 0,
+        errors: sampleDataResult.errorCount || 0
       }
     });
   } catch (error) {
     // Rollback on error
     await pool.query('ROLLBACK');
     console.error('Delete demo data error:', error);
-    res.status(500).json({ error: { message: 'Failed to delete demo data' } });
+    res.status(500).json({ error: { message: 'Failed to reset demo data' } });
   }
 });
 

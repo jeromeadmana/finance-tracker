@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const bcrypt = require('bcryptjs');
 const { pool } = require('./database');
+const { insertSampleData } = require('./sample-data-helper');
 
 /**
  * Initialize demo users for portfolio version
@@ -54,20 +55,48 @@ async function initializeDemoUsers() {
       [demoUserEmail]
     );
 
+    let demoUserId;
+    let isNewDemoUser = false;
+
     if (existingDemoUser.rows.length > 0) {
       console.log('✅ Demo User already exists');
+      demoUserId = existingDemoUser.rows[0].id;
       await pool.query(
         'UPDATE ft_users SET role = $1, password_hash = $2 WHERE email = $3',
         ['user', demoUserHash, demoUserEmail]
       );
       console.log('🔄 Demo User updated\n');
     } else {
-      await pool.query(
+      const result = await pool.query(
         `INSERT INTO ft_users (email, password_hash, first_name, last_name, role, is_active)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id`,
         [demoUserEmail, demoUserHash, 'Demo', 'User', 'user', true]
       );
+      demoUserId = result.rows[0].id;
+      isNewDemoUser = true;
       console.log('✅ Demo User created\n');
+    }
+
+    // Insert sample data for new demo user or if no transactions exist
+    const transactionCheck = await pool.query(
+      'SELECT COUNT(*) as count FROM ft_transactions WHERE user_id = $1',
+      [demoUserId]
+    );
+
+    const hasTransactions = parseInt(transactionCheck.rows[0].count) > 0;
+
+    if (isNewDemoUser || !hasTransactions) {
+      console.log('📝 Inserting sample data for demo user...');
+      const sampleDataResult = await insertSampleData(demoUserId);
+
+      if (sampleDataResult.success) {
+        console.log(`✅ Sample data inserted: ${sampleDataResult.successCount} transactions\n`);
+      } else {
+        console.log(`⚠️  Sample data insertion had errors: ${sampleDataResult.errorCount} failed\n`);
+      }
+    } else {
+      console.log('ℹ️  Demo user already has transactions, skipping sample data\n');
     }
 
     // Display credentials
