@@ -55,7 +55,9 @@ export const budgetAPI = {
 // Goal APIs
 export const goalAPI = {
   getAll: () => api.get('/goals'),
-  create: (data) => api.post('/goals', data)
+  create: (data) => api.post('/goals', data),
+  update: (id, data) => api.put(`/goals/${id}`, data),
+  delete: (id) => api.delete(`/goals/${id}`)
 };
 
 // User APIs

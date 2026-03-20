@@ -321,7 +321,7 @@ const sampleTransactions = [
     merchant: 'City Power & Electric',
     amount: 142.67,
     type: 'expense',
-    category: 'Utilities',
+    category: 'Bills & Utilities',
     date: getRandomDate(10),
     ai_categorized: false
   },
@@ -330,7 +330,7 @@ const sampleTransactions = [
     merchant: 'Comcast Xfinity',
     amount: 79.99,
     type: 'expense',
-    category: 'Utilities',
+    category: 'Bills & Utilities',
     date: getRandomDate(15),
     ai_categorized: false
   },
@@ -339,7 +339,7 @@ const sampleTransactions = [
     merchant: 'Verizon Wireless',
     amount: 85.00,
     type: 'expense',
-    category: 'Utilities',
+    category: 'Bills & Utilities',
     date: getRandomDate(12),
     ai_categorized: false
   },
@@ -399,7 +399,7 @@ const sampleTransactions = [
     merchant: 'State Farm Insurance',
     amount: 156.00,
     type: 'expense',
-    category: 'Other',
+    category: 'Other Expense',
     date: getRandomDate(13),
     ai_categorized: false
   },
@@ -408,7 +408,7 @@ const sampleTransactions = [
     merchant: 'Amazon',
     amount: 65.00,
     type: 'expense',
-    category: 'Other',
+    category: 'Other Expense',
     date: getRandomDate(35),
     ai_categorized: true
   }
@@ -417,6 +417,51 @@ const sampleTransactions = [
 // Total: 5 income + 35 expenses = 40 transactions
 // Leaves 10 slots for user testing (50 transaction limit)
 
+/**
+ * Sample financial goals for demo user
+ */
+function getFutureDate(daysFromNow) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().split('T')[0];
+}
+
+const sampleGoals = [
+  {
+    title: 'Emergency Fund',
+    description: 'Save 6 months of living expenses',
+    target_amount: 15000.00,
+    current_amount: 8750.00,
+    target_date: getFutureDate(180),
+    status: 'active'
+  },
+  {
+    title: 'Vacation Fund',
+    description: 'Summer trip to Europe',
+    target_amount: 5000.00,
+    current_amount: 1200.00,
+    target_date: getFutureDate(120),
+    status: 'active'
+  },
+  {
+    title: 'New Laptop',
+    description: 'MacBook Pro for freelance work',
+    target_amount: 2500.00,
+    current_amount: 2500.00,
+    target_date: null,
+    status: 'completed'
+  },
+  {
+    title: 'Home Down Payment',
+    description: 'Save for 20% down payment on first home',
+    target_amount: 60000.00,
+    current_amount: 4500.00,
+    target_date: getFutureDate(730),
+    status: 'active'
+  }
+];
+
 module.exports = {
-  sampleTransactions
+  sampleTransactions,
+  sampleGoals
 };

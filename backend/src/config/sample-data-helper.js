@@ -1,5 +1,5 @@
 const { pool } = require('./database');
-const { sampleTransactions } = require('./sample-data');
+const { sampleTransactions, sampleGoals } = require('./sample-data');
 
 /**
  * Insert sample data for a specific user
@@ -53,10 +53,35 @@ async function insertSampleData(userId) {
       }
     }
 
+    // Insert sample goals
+    let goalsInserted = 0;
+    for (const goal of sampleGoals) {
+      try {
+        await pool.query(
+          `INSERT INTO ft_financial_goals
+           (user_id, title, description, target_amount, current_amount, target_date, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            userId,
+            goal.title,
+            goal.description,
+            goal.target_amount,
+            goal.current_amount,
+            goal.target_date,
+            goal.status
+          ]
+        );
+        goalsInserted++;
+      } catch (error) {
+        console.error(`Error inserting goal: ${goal.title}`, error.message);
+      }
+    }
+
     return {
       success: true,
       successCount,
       errorCount,
+      goalsInserted,
       totalAttempted: sampleTransactions.length
     };
 
